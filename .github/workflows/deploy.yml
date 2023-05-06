@@ -39,19 +39,4 @@ jobs:
         IMAGE_TAG: nodejs_demo_image
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      
-    - name: Deploy Staging
-      env:
-        REGISTRY: ${{ steps.login-ecr-staging.outputs.registry }}
-        REPOSITORY: docker_nodejs_demo
-        IMAGE_TAG: ${{ steps.varsstaging.outputs.sha_short }}
-      run: |
-        pip3 install awscli
-        TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition docker_nodejs_demo --region eu-west-2)
-        NEW_CONTAINER_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$REGISTRY/$REPOSITORY:$IMAGE_TAG" '.taskDefinition.containerDefinitions[0].image = $IMAGE | .taskDefinition.containerDefinitions[0]')
-        echo "Registering new container definition..."
-        aws ecs register-task-definition --region eu-west-2 --family docker_nodejs_demo --container-definitions "${NEW_CONTAINER_DEFINITION}" --execution-role-arn  "arn:aws:iam::117523087655:role/ecsTaskExecutionRole" --cpu "0.50 vCPU" --memory "1GB" --network-mode "awsvpc" --requires-compatibilities "FARGATE"
-        echo "Updating the service..."
-        aws ecs update-service --region eu-west-2 --cluster staging_cluster --service docker_nodejs_demo  --task-definition docker_nodejs_demo --desired-count "1"    
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG 
